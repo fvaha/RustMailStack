@@ -25,7 +25,7 @@ URL="https://github.com/stalwartlabs/stalwart/releases/download/${STALWART_TAG}/
 echo "==> $URL"
 curl -fsSL "$URL" -o "/tmp/$TARBALL"
 mkdir -p /tmp/stalwart-extract && tar -xzf "/tmp/$TARBALL" -C /tmp/stalwart-extract
-BIN="$(find /tmp/stalwart-extract -type f -name stalwart -perm -u+x | head -1)"
+BIN="$(find /tmp/stalwart-extract -type f -name stalwart | head -1)"
 [ -n "$BIN" ] || { echo "stalwart binary not found in tarball" >&2; exit 1; }
 install -m 0755 "$BIN" "$ROOT/usr/local/bin/stalwart"
 
