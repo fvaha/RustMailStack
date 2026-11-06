@@ -1,4 +1,5 @@
-build/
+/build/root/
+/build/deb/
 artefacts/
 *.deb
 *.tar.gz
