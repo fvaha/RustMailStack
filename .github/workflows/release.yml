@@ -1,0 +1,51 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  package:
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the IRIS fork artefact
+        run: |
+          git clone --depth 1 "${{ vars.IRIS_CLONE_URL || 'https://github.com/fvaha/irisproject' }}" /tmp/iris
+          corepack enable || true
+          ( cd /tmp/iris/apps/web && npm ci && npm run build )
+          ( cd /tmp/iris && cargo build --release --target x86_64-unknown-linux-gnu -p iris-api )
+          mkdir -p artefacts
+          cp /tmp/iris/target/release/iris-api "artefacts/iris-api-${{ matrix.arch }}"
+          tar -C /tmp/iris/apps/web -czf artefacts/iris-dist.tgz dist
+
+      - name: Assemble payload
+        run: ARCH=${{ matrix.arch }} ./build/build-payload.sh
+
+      - name: Build .deb
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p build/deb/DEBIAN
+          sed -e "s/@VERSION@/$VERSION/" -e "s/@ARCH@/${{ matrix.arch }}/" debian/control > build/deb/DEBIAN/control
+          cp debian/postinst debian/prerm build/deb/DEBIAN/
+          chmod 0755 build/deb/DEBIAN/postinst build/deb/DEBIAN/prerm
+          cp -a build/root/. build/deb/
+          dpkg-deb --build --root-owner-group build/deb "rustmailstack_${VERSION}_${{ matrix.arch }}.deb"
+
+      - name: Build portable tarball
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          tar -C build/root -czf "rustmailstack-${VERSION}-${{ matrix.arch }}.tar.gz" .
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            rustmailstack_*.deb
+            rustmailstack-*.tar.gz

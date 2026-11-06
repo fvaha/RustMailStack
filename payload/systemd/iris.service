@@ -1,0 +1,23 @@
+[Unit]
+Description=RustMailStack webmail (IRIS)
+After=network-online.target stalwart.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=iris
+Group=iris
+WorkingDirectory=/var/lib/iris
+EnvironmentFile=/etc/iris/iris.env
+ExecStart=/opt/iris/iris-api
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/iris
+MemoryMax=256M
+
+[Install]
+WantedBy=multi-user.target

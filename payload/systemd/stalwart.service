@@ -1,0 +1,22 @@
+[Unit]
+Description=Stalwart mail server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=stalwart
+Group=stalwart
+ExecStart=/usr/local/bin/stalwart
+Restart=on-failure
+RestartSec=3
+LimitNOFILE=65536
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/stalwart /var/log/stalwart
+MemoryMax=768M
+
+[Install]
+WantedBy=multi-user.target

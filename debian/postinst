@@ -1,0 +1,61 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  configure)
+    # service accounts
+    getent group stalwart >/dev/null || addgroup --system stalwart
+    getent passwd stalwart >/dev/null || adduser --system --ingroup stalwart         --home /var/lib/stalwart --no-create-home --shell /usr/sbin/nologin stalwart
+    getent group iris >/dev/null || addgroup --system iris
+    getent passwd iris >/dev/null || adduser --system --ingroup iris         --home /var/lib/iris --no-create-home --shell /usr/sbin/nologin iris
+
+    install -d -o stalwart -g stalwart -m 750 /var/lib/stalwart /var/log/stalwart /etc/stalwart
+    install -d -o iris      -g iris      -m 750 /var/lib/iris
+    install -d -o root      -g root      -m 755 /opt/iris /srv/iris /etc/iris /etc/mailstack
+    chown -R root:root /srv/iris
+
+    # IRIS env on first install only (keeps the session secret across upgrades)
+    if [ ! -f /etc/iris/iris.env ]; then
+      umask 077
+      cat > /etc/iris/iris.env <<EOF
+IRIS_ENV=production
+IRIS_HOST=127.0.0.1
+IRIS_PORT=\${IRIS_PORT:-8000}
+STALWART_API_URL=http://127.0.0.1:8080
+DATABASE_URL=sqlite:/var/lib/iris/iris.db
+SESSION_SECRET=$(openssl rand -hex 32)
+SEND_LOCAL_DOMAINS=\${MAIL_DOMAIN:-}
+SEND_EXTERNAL=true
+IRIS_INTEGRATION_EMAIL_ENABLED=false
+TEMP_INBOX_DOMAIN=
+EOF
+      chown root:iris /etc/iris/iris.env
+      chmod 640 /etc/iris/iris.env
+    fi
+
+    # deployment values template
+    if [ ! -f /etc/mailstack/mailstack.env ]; then
+      cp /etc/mailstack/mailstack.env.example /etc/mailstack/mailstack.env
+      chmod 600 /etc/mailstack/mailstack.env
+    fi
+
+    # certificate follow-up: daily, only restarts Stalwart when the cert changes
+    printf '17 4 * * *\troot\t/usr/local/sbin/mailstack-cert-sync\n' > /etc/cron.d/mailstack-cert
+    chmod 644 /etc/cron.d/mailstack-cert
+
+    systemctl daemon-reload || true
+    systemctl enable --now stalwart.service || true
+    systemctl enable --now iris.service || true
+
+    echo
+    echo "RustMailStack installed."
+    echo "  1. edit /etc/mailstack/mailstack.env (MAIL_HOST, WEBMAIL_HOST, MAIL_DOMAIN)"
+    echo "  2. open the Stalwart setup wizard: http://127.0.0.1:8080/admin"
+    echo "     (tunnel it: ssh -N -L 8080:127.0.0.1:8080 <server>)"
+    echo "  3. add mail.vahid.im/admin UI + webmail vhosts to Caddy: import /etc/caddy/mailstack.caddy"
+    echo "  4. verify: /usr/local/sbin/mailstack-health"
+    echo
+    ;;
+esac
+
+exit 0
