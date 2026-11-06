@@ -47,12 +47,17 @@ EOF
     systemctl enable --now stalwart.service || true
     systemctl enable --now iris.service || true
 
+    # shellcheck disable=SC1091
+    [ -f /etc/mailstack/mailstack.env ] && . /etc/mailstack/mailstack.env
+    MAIL_HOST="${MAIL_HOST:-<MAIL_HOST>}"
+    WEBMAIL_HOST="${WEBMAIL_HOST:-<WEBMAIL_HOST>}"
+
     echo
     echo "RustMailStack installed."
     echo "  1. edit /etc/mailstack/mailstack.env (MAIL_HOST, WEBMAIL_HOST, MAIL_DOMAIN)"
     echo "  2. open the Stalwart setup wizard: http://127.0.0.1:8080/admin"
     echo "     (tunnel it: ssh -N -L 8080:127.0.0.1:8080 <server>)"
-    echo "  3. add mail.vahid.im/admin UI + webmail vhosts to Caddy: import /etc/caddy/mailstack.caddy"
+    echo "  3. add $MAIL_HOST / $WEBMAIL_HOST to Caddy: import /etc/caddy/mailstack.caddy"
     echo "  4. verify: /usr/local/sbin/mailstack-health"
     echo
     ;;
