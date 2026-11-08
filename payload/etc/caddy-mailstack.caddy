@@ -16,6 +16,13 @@
         file_server
     }
 
+    # Brand assets (logo, favicon, OG image) — drop files in /etc/iris/branding/
+    handle /branding/* {
+        root * /etc/iris
+        header Cache-Control "public, max-age=3600"
+        file_server
+    }
+
     @backend path /api/* /auth/* /health
     handle @backend {
         reverse_proxy 127.0.0.1:{$IRIS_PORT} {

@@ -62,9 +62,13 @@ install from `branding.json.example`; edit it and reload the page — no rebuild
 }
 ```
 
-Every field is optional; missing values fall back to the shipped defaults. `logoUrl` / `faviconUrl` are
-URLs the browser can load — either override the files in `/srv/iris/dist/` or point at an external host.
+Every field is optional; missing values fall back to the shipped defaults. `logoUrl` / `faviconUrl` /
+`ogImageUrl` are URLs the browser can load: put the files in `/etc/iris/branding/` (served at
+`/branding/*`, survives upgrades) and reference them as `/branding/logo.svg`.
 Full schema: `docs/branding.md` in the [irisproject fork](https://github.com/fvaha/irisproject).
+
+A worked example — the vahid.im identity, Serbian copy, hidden temporary inboxes — lives in
+[`deploy/vahid.im/`](deploy/vahid.im): `sudo ./deploy/vahid.im/apply.sh`.
 
 ## Repo layout (payload-first)
 
@@ -74,6 +78,7 @@ payload/                  units, Caddy snippet, scripts, env example (arch-indep
 build/build-payload.sh    fetches the pinned binaries, assembles build/root/
 debian/                   control + postinst + prerm  →  .deb
 install.sh                same tree, no dpkg  →  portable tarball
+deploy/vahid.im/          example identity: branding.json + assets + apply.sh
 .github/workflows/        tag v* → amd64 + arm64: .deb and .tar.gz attached to the release
 ```
 
@@ -86,11 +91,11 @@ around it. Adding an `.rpm` later is one `fpm -s dir -t rpm` line on the same tr
 fork). Bumping either is the whole update procedure — CI checks out exactly that ref, so what is
 tested is what ships.
 
-Push a tag: `git tag v1.1.0 && git push --tags` → CI builds IRIS from the pinned fork tag, downloads
+Push a tag: `git tag v1.2.0 && git push --tags` → CI builds IRIS from the pinned fork tag, downloads
 the pinned Stalwart release, and attaches:
 
-- `rustmailstack_1.1.0_amd64.deb`, `rustmailstack_1.1.0_arm64.deb`
-- `rustmailstack-1.1.0-amd64.tar.gz`, `rustmailstack-1.1.0-arm64.tar.gz`
+- `rustmailstack_1.2.0_amd64.deb`, `rustmailstack_1.2.0_arm64.deb`
+- `rustmailstack-1.2.0-amd64.tar.gz`, `rustmailstack-1.2.0-arm64.tar.gz`
 
 ## Status
 
