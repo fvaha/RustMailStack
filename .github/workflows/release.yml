@@ -67,6 +67,13 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           tar -C build/root -czf "rustmailstack-${VERSION}-${{ matrix.arch }}.tar.gz" .
 
+      - name: Container install test (amd64)
+        if: matrix.arch == 'amd64'
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          chmod +x tests/container-test.sh
+          ./tests/container-test.sh "rustmailstack_${VERSION}_amd64.deb"
+
       - uses: softprops/action-gh-release@v2
         with:
           files: |
