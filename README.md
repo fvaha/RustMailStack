@@ -67,8 +67,9 @@ Every field is optional; missing values fall back to the shipped defaults. `logo
 `/branding/*`, survives upgrades) and reference them as `/branding/logo.svg`.
 Full schema: `docs/branding.md` in the [irisproject fork](https://github.com/fvaha/irisproject).
 
-A worked example — the vahid.im identity, Serbian copy, hidden temporary inboxes — lives in
-[`deploy/vahid.im/`](deploy/vahid.im): `sudo ./deploy/vahid.im/apply.sh`.
+A worked example lives in [`deploy/example/`](deploy/example): copy `branding.json`, edit the values,
+`install -m 644 branding.json /etc/iris/branding.json`. Deployment-specific identities are kept in
+private repos, not here.
 
 ## Repo layout (payload-first)
 
@@ -78,7 +79,7 @@ payload/                  units, Caddy snippet, scripts, env example (arch-indep
 build/build-payload.sh    fetches the pinned binaries, assembles build/root/
 debian/                   control + postinst + prerm  →  .deb
 install.sh                same tree, no dpkg  →  portable tarball
-deploy/vahid.im/          example identity: branding.json + assets + apply.sh
+deploy/example/           branding.json template for a deployment's own identity
 .github/workflows/        tag v* → amd64 + arm64: .deb and .tar.gz attached to the release
 ```
 

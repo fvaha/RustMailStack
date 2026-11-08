@@ -1,0 +1,19 @@
+{
+  "name": "Acme Mail",
+  "tagline": "Mail that stays yours.",
+  "product": "webmail",
+  "url": "https://mail.acme.example",
+  "contactEmail": "postmaster@acme.example",
+  "contactAddress": "Acme d.o.o., Ulica 1, 11000 Beograd",
+  "themeColor": "#0F62FE",
+  "logoUrl": "",
+  "faviconUrl": "",
+  "ogImageUrl": "",
+  "hideTempInbox": false,
+  "strings": {},
+  "links": [
+    { "label": "Privacy", "href": "/privacy/" },
+    { "label": "Terms", "href": "/terms/" },
+    { "label": "Status", "href": "https://status.acme.example" }
+  ]
+}
