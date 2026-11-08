@@ -58,8 +58,9 @@ EOF
     PROVISIONED=0
     if [ -z "${2:-}" ] && [ "${MAILSTACK_SKIP_PROVISION:-0}" != "1" ]; then
       # shellcheck disable=SC1091
+      _pre_domain="${MAIL_DOMAIN:-}"
       . /etc/mailstack/mailstack.env 2>/dev/null || true
-      DOMAIN="${MAILSTACK_DOMAIN:-${MAIL_DOMAIN:-}}"
+      DOMAIN="${MAILSTACK_DOMAIN:-${_pre_domain:-${MAIL_DOMAIN:-}}}"
       if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "example.com" ]; then
         if [ -t 0 ]; then
           printf 'Mail domain for this server (empty = finish in the Stalwart wizard): '

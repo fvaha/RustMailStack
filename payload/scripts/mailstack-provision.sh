@@ -16,13 +16,18 @@ CREDS=/etc/mailstack/admin.credentials
 TLS_DIR=/etc/stalwart/tls
 LOG=/var/log/stalwart/setup.log
 
+# Values passed on the command line win over the env file.
+_explicit_domain="${MAIL_DOMAIN:-}"
+_explicit_host="${MAIL_HOST:-}"
+_explicit_admin="${MAIL_ADMIN_EMAIL:-}"
+
 log() { echo "mailstack-provision: $*" >&2; }
 die() { echo "mailstack-provision: error: $*" >&2; exit 1; }
 
 [ "$(id -u)" -eq 0 ] || die "run as root"
 [ -f "$ENV_FILE" ] && . "$ENV_FILE"
 
-DOMAIN="${MAIL_DOMAIN:-${IRIS_DOMAIN:-}}"
+DOMAIN="${_explicit_domain:-${MAIL_DOMAIN:-${IRIS_DOMAIN:-}}}"
 DOMAIN=$(printf '%s' "$DOMAIN" | tr 'A-Z' 'a-z')
 case "$DOMAIN" in
   ""|example.com)
@@ -33,8 +38,8 @@ case "$DOMAIN" in
   *) die "MAIL_DOMAIN '$DOMAIN' needs at least one dot" ;;
 esac
 
-MAIL_HOST="${MAIL_HOST:-mail.$DOMAIN}"
-ADMIN_EMAIL="${MAIL_ADMIN_EMAIL:-admin@$DOMAIN}"
+MAIL_HOST="${_explicit_host:-${MAIL_HOST:-mail.$DOMAIN}}"
+ADMIN_EMAIL="${_explicit_admin:-${MAIL_ADMIN_EMAIL:-admin@$DOMAIN}}"
 ADMIN_EMAIL=$(printf '%s' "$ADMIN_EMAIL" | tr 'A-Z' 'a-z')
 case "$ADMIN_EMAIL" in
   *"@$DOMAIN") ;;
