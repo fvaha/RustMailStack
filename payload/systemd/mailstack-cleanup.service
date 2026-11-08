@@ -1,0 +1,15 @@
+[Unit]
+Description=RustMailStack retention cleanup (one pass)
+
+[Service]
+Type=oneshot
+User=iris
+Group=iris
+WorkingDirectory=/var/lib/iris
+EnvironmentFile=/etc/iris/iris.env
+ExecStart=/opt/iris/iris-api cleanup-once
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/iris

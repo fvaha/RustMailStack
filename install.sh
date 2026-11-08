@@ -24,6 +24,10 @@ install -m 0644 lib/systemd/system/stalwart.service /lib/systemd/system/
 install -m 0644 lib/systemd/system/iris.service     /lib/systemd/system/
 install -m 0755 usr/local/sbin/mailstack-cert-sync  /usr/local/sbin/
 install -m 0755 usr/local/sbin/mailstack-health     /usr/local/sbin/
+install -m 0755 usr/local/sbin/mailstack-provision /usr/local/sbin/
+install -m 0755 usr/local/sbin/mailstack-setup     /usr/local/sbin/
+install -m 0644 lib/systemd/system/mailstack-cleanup.service /lib/systemd/system/
+install -m 0644 lib/systemd/system/mailstack-cleanup.timer   /lib/systemd/system/
 install -d -m 755 /etc/caddy /etc/mailstack /etc/iris
 [ -f /etc/caddy/mailstack.caddy ] || install -m 0644 etc/caddy/mailstack.caddy /etc/caddy/mailstack.caddy
 [ -f /etc/mailstack/mailstack.env ] || { install -m 600 /dev/null /etc/mailstack/mailstack.env; cp etc/mailstack/mailstack.env.example /etc/mailstack/mailstack.env; }
@@ -53,14 +57,48 @@ fi
 
 echo "==> services"
 systemctl daemon-reload
+
+echo "==> stalwart provisioning"
+. /etc/mailstack/mailstack.env 2>/dev/null || true
+DOMAIN="${MAILSTACK_DOMAIN:-${MAIL_DOMAIN:-}}"
+if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "example.com" ]; then
+  if [ -t 0 ]; then
+    printf 'Mail domain for this server (empty = finish in the Stalwart wizard): '
+    read -r DOMAIN
+  fi
+fi
+PROVISIONED=0
+case "$DOMAIN" in
+  ""|example.com) : ;;
+  *)
+    echo "provisioning Stalwart for $DOMAIN ..."
+    if MAIL_DOMAIN="$DOMAIN" MAIL_HOST="mail.$DOMAIN" /usr/local/sbin/mailstack-provision; then
+      PROVISIONED=1
+      sed -i -e "s|^MAIL_DOMAIN=.*|MAIL_DOMAIN=$DOMAIN|" \
+             -e "s|^MAIL_HOST=.*|MAIL_HOST=mail.$DOMAIN|" \
+             -e "s|^WEBMAIL_HOST=.*|WEBMAIL_HOST=webmail.$DOMAIN|" \
+             /etc/mailstack/mailstack.env
+    else
+      echo "provisioning failed; finish setup in the wizard: http://127.0.0.1:8080/admin"
+    fi
+    ;;
+esac
+
 systemctl enable --now stalwart.service
 systemctl enable --now iris.service
+systemctl enable --now mailstack-cleanup.timer
 printf '17 4 * * *\troot\t/usr/local/sbin/mailstack-cert-sync\n' > /etc/cron.d/mailstack-cert
 
 echo
 echo "RustMailStack installed. Next:"
 echo "  1. /etc/mailstack/mailstack.env — MAIL_HOST, WEBMAIL_HOST, MAIL_DOMAIN"
-echo "  2. http://127.0.0.1:8080/admin — Stalwart setup wizard (tunnel it over ssh)"
+if [ "$PROVISIONED" = 1 ]; then
+  echo "     Stalwart is provisioned for $DOMAIN"
+  echo "     admin credentials: /etc/mailstack/admin.credentials (mode 600)"
+  echo "     DNS records: /etc/mailstack/dns-zone.txt"
+else
+  echo "  2. Stalwart wizard: http://127.0.0.1:8080/admin (tunnel over ssh)"
+fi
 echo "  3. Caddyfile: import /etc/caddy/mailstack.caddy   (MAIL_HOST/WEBMAIL_HOST as env)"
 echo "  4. /etc/iris/branding.json — name, logo, colours, links (optional)"
 echo "  5. /usr/local/sbin/mailstack-health"

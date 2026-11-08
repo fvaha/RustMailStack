@@ -5,7 +5,7 @@ Priority: optional
 Architecture: @ARCH@
 Maintainer: vahid.im <vaha@vahid.im>
 Homepage: https://github.com/fvaha/RustMailStack
-Depends: curl, openssl, ca-certificates
+Depends: curl, openssl, ca-certificates, python3
 Recommends: caddy
 Description: Stalwart + IRIS self-hosted mail stack
  Stalwart mail server with the IRIS webmail frontend, packaged as one unit:

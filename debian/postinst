@@ -51,9 +51,42 @@ EOF
     printf '17 4 * * *\troot\t/usr/local/sbin/mailstack-cert-sync\n' > /etc/cron.d/mailstack-cert
     chmod 644 /etc/cron.d/mailstack-cert
 
+    # unattended Stalwart provisioning on a fresh install: one domain, admin
+    # account, TLS certificate object and the DNS zone file. Interactive
+    # installs get a single question; anything non-interactive falls back to
+    # the setup wizard, which is also what upgrades keep doing.
+    PROVISIONED=0
+    if [ -z "${2:-}" ] && [ "${MAILSTACK_SKIP_PROVISION:-0}" != "1" ]; then
+      # shellcheck disable=SC1091
+      . /etc/mailstack/mailstack.env 2>/dev/null || true
+      DOMAIN="${MAILSTACK_DOMAIN:-${MAIL_DOMAIN:-}}"
+      if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "example.com" ]; then
+        if [ -t 0 ]; then
+          printf 'Mail domain for this server (empty = finish in the Stalwart wizard): '
+          read -r DOMAIN
+        fi
+      fi
+      case "$DOMAIN" in
+        ""|example.com) : ;;
+        *)
+          echo "Provisioning Stalwart for $DOMAIN ..."
+          if MAIL_DOMAIN="$DOMAIN" MAIL_HOST="mail.$DOMAIN" /usr/local/sbin/mailstack-provision; then
+            PROVISIONED=1
+            sed -i -e "s|^MAIL_DOMAIN=.*|MAIL_DOMAIN=$DOMAIN|" \
+                   -e "s|^MAIL_HOST=.*|MAIL_HOST=mail.$DOMAIN|" \
+                   -e "s|^WEBMAIL_HOST=.*|WEBMAIL_HOST=webmail.$DOMAIN|" \
+                   /etc/mailstack/mailstack.env
+          else
+            echo "Provisioning failed; finish setup in the wizard: http://127.0.0.1:8080/admin"
+          fi
+          ;;
+      esac
+    fi
+
     systemctl daemon-reload || true
     systemctl enable --now stalwart.service || true
     systemctl enable --now iris.service || true
+    systemctl enable --now mailstack-cleanup.timer || true
 
     # shellcheck disable=SC1091
     [ -f /etc/mailstack/mailstack.env ] && . /etc/mailstack/mailstack.env
@@ -63,10 +96,17 @@ EOF
     echo
     echo "RustMailStack installed."
     echo "  1. edit /etc/mailstack/mailstack.env (MAIL_HOST, WEBMAIL_HOST, MAIL_DOMAIN)"
-    echo "  2. open the Stalwart setup wizard: http://127.0.0.1:8080/admin"
-    echo "     (tunnel it: ssh -N -L 8080:127.0.0.1:8080 <server>)"
+    if [ "$PROVISIONED" = 1 ]; then
+      echo "     Stalwart is already provisioned for $DOMAIN"
+      echo "     admin credentials: /etc/mailstack/admin.credentials (mode 600)"
+      echo "     DNS records to publish: /etc/mailstack/dns-zone.txt"
+      sed -n '1,12p' /etc/mailstack/dns-zone.txt 2>/dev/null || true
+    else
+      echo "  2. open the Stalwart setup wizard: http://127.0.0.1:8080/admin"
+      echo "     (tunnel it: ssh -N -L 8080:127.0.0.1:8080 <server>)"
+    fi
     echo "  3. add $MAIL_HOST / $WEBMAIL_HOST to Caddy: import /etc/caddy/mailstack.caddy"
-    echo "  4. branding (optional): /etc/iris/branding.json — name, logo, colours, links"
+    echo "  4. branding (optional): /etc/iris/branding.json, name, logo, colours, links"
     echo "  5. verify: /usr/local/sbin/mailstack-health"
     echo
     ;;
