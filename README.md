@@ -19,6 +19,8 @@ Caddy (HTTPS) ──┬─→ 127.0.0.1:8080  Stalwart  (admin UI + JMAP + mail 
 | `/etc/caddy/mailstack.caddy` | two vhosts: mail host to Stalwart, webmail host to IRIS and static files |
 | `/usr/local/sbin/mailstack-cert-sync` | daily: copies Caddy's renewed cert into Stalwart, restarts only on change |
 | `/usr/local/sbin/mailstack-health` | checks JMAP session, IRIS `/health`, TLS on 993/465 |
+| `/usr/local/sbin/mailstack-provision` + `mailstack-setup` | unattended Stalwart setup: domain, admin account, TLS certificate object, DNS zone file |
+| `/lib/systemd/system/mailstack-cleanup.{service,timer}` | runs `iris-api cleanup-once` every 15 minutes |
 | `/etc/mailstack/mailstack.env` | `MAIL_HOST`, `WEBMAIL_HOST`, `MAIL_DOMAIN`, optional `CF_API_TOKEN` |
 | `/etc/iris/branding.json` | white-label name, logo, colours, contact, footer links (served at `/branding.json`) |
 
@@ -32,9 +34,18 @@ sudo apt install ./rustmailstack_1.3.0_amd64.deb
 tar -xzf rustmailstack-1.3.0-amd64.tar.gz -C /tmp/rms && sudo /tmp/rms/install.sh
 ```
 
-Then set `/etc/mailstack/mailstack.env`, finish the Stalwart wizard on `http://127.0.0.1:8080/admin`
-(over an SSH tunnel), `import /etc/caddy/mailstack.caddy` into your Caddyfile, and run
-`mailstack-health`.
+The installer asks for one mail domain. Give it and Stalwart is provisioned on the spot: domain,
+admin account, DKIM keys, TLS certificate object, and `/etc/mailstack/dns-zone.txt` with the records
+you have to publish. Leave the answer empty (or install non-interactively) and you get the setup
+wizard at `http://127.0.0.1:8080/admin` instead. Non-interactive installs can preseed the answer:
+
+```bash
+sudo MAILSTACK_DOMAIN=example.com apt install ./rustmailstack_1.4.0_amd64.deb
+sudo MAILSTACK_DOMAIN=example.com ./install.sh        # tarball
+```
+
+After that, add `/etc/caddy/mailstack.caddy` to your Caddyfile and run `mailstack-health`. The admin
+password is printed once and stored in `/etc/mailstack/admin.credentials` (mode 600).
 
 Two steps stay manual because the provider owns them: the reverse DNS (PTR) record, and at some
 providers (netcup, for example) unblocking inbound port 25.
@@ -83,6 +94,7 @@ build/build-payload.sh    fetches the pinned binaries, assembles build/root/
 debian/                   control, postinst, prerm  ->  .deb
 install.sh                same tree, no dpkg  ->  portable tarball
 deploy/example/           branding.json template for a deployment's own identity
+tests/container-test.sh   installs the .deb in a Debian 12 container and checks it comes up
 .github/workflows/        tag v* -> amd64 + arm64: .deb and .tar.gz on the release
 ```
 
@@ -106,7 +118,8 @@ the pinned Stalwart release, and attaches:
 - [x] packaging skeleton, units, Caddy snippet, cert sync, health check
 - [x] CI matrix (amd64 + arm64), `.deb` and tarball
 - [x] white-label branding via `/etc/iris/branding.json` (webmail 0.4.0)
-- [ ] unattended Stalwart configuration (today: the setup wizard, one screen)
+- [x] unattended Stalwart configuration: one domain question, DNS zone file, admin credentials
+- [x] retention cleanup timer, container install test in CI
 - [ ] automatic DNS records for the first domain (needs `CF_API_TOKEN`)
 - [ ] `.rpm` (payload-first, about 30 minutes when needed)
 
