@@ -9,7 +9,7 @@ sudo install -m 644 branding.json /etc/iris/branding.json
 sudo install -m 644 logo.svg favicon.svg og-image.png /etc/iris/branding/
 ```
 
-Then reload the webmail — no rebuild, no restart. `/etc/iris/` is outside
+Then reload the webmail. No rebuild, no restart. `/etc/iris/` is outside
 `/srv/iris/dist`, so package upgrades leave the identity alone.
 
 ## What the fields do
