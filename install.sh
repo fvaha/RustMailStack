@@ -27,6 +27,8 @@ install -m 0755 usr/local/sbin/mailstack-health     /usr/local/sbin/
 install -d -m 755 /etc/caddy /etc/mailstack /etc/iris
 [ -f /etc/caddy/mailstack.caddy ] || install -m 0644 etc/caddy/mailstack.caddy /etc/caddy/mailstack.caddy
 [ -f /etc/mailstack/mailstack.env ] || { install -m 600 /dev/null /etc/mailstack/mailstack.env; cp etc/mailstack/mailstack.env.example /etc/mailstack/mailstack.env; }
+install -m 0644 etc/iris/branding.json.example /etc/iris/branding.json.example
+[ -f /etc/iris/branding.json ] || install -m 0644 etc/iris/branding.json.example /etc/iris/branding.json
 
 install -d -o stalwart -g stalwart -m 750 /var/lib/stalwart /var/log/stalwart /etc/stalwart
 install -d -o iris -g iris -m 750 /var/lib/iris
@@ -43,6 +45,8 @@ SESSION_SECRET=$(openssl rand -hex 32)
 SEND_EXTERNAL=true
 IRIS_INTEGRATION_EMAIL_ENABLED=false
 TEMP_INBOX_DOMAIN=
+# Comma-separated allow-list for the admin dashboard (#/admin). Empty = nobody.
+IRIS_ADMIN_EMAILS=
 EOF
   chown root:iris /etc/iris/iris.env && chmod 640 /etc/iris/iris.env
 fi
@@ -58,4 +62,5 @@ echo "RustMailStack installed. Next:"
 echo "  1. /etc/mailstack/mailstack.env — MAIL_HOST, WEBMAIL_HOST, MAIL_DOMAIN"
 echo "  2. http://127.0.0.1:8080/admin — Stalwart setup wizard (tunnel it over ssh)"
 echo "  3. Caddyfile: import /etc/caddy/mailstack.caddy   (MAIL_HOST/WEBMAIL_HOST as env)"
-echo "  4. /usr/local/sbin/mailstack-health"
+echo "  4. /etc/iris/branding.json — name, logo, colours, links (optional)"
+echo "  5. /usr/local/sbin/mailstack-health"

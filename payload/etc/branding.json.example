@@ -1,0 +1,15 @@
+{
+  "name": "example.com",
+  "tagline": "Every message finds its way.",
+  "product": "webmail",
+  "url": "https://webmail.example.com",
+  "contactEmail": "postmaster@example.com",
+  "contactAddress": "",
+  "themeColor": "#B83232",
+  "logoUrl": "",
+  "faviconUrl": "",
+  "links": [
+    { "label": "Privacy", "href": "/privacy/" },
+    { "label": "Terms", "href": "/terms/" }
+  ]
+}

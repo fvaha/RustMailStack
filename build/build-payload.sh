@@ -41,6 +41,7 @@ mv "$ROOT/srv/iris/dist.tmp" "$ROOT/srv/iris/dist" 2>/dev/null || true
 install -m 0644 payload/systemd/stalwart.service "$ROOT/lib/systemd/system/stalwart.service"
 install -m 0644 payload/systemd/iris.service     "$ROOT/lib/systemd/system/iris.service"
 install -m 0644 payload/etc/mailstack.env.example "$ROOT/etc/mailstack/mailstack.env.example"
+install -m 0644 payload/etc/branding.json.example "$ROOT/etc/iris/branding.json.example"
 install -m 0644 payload/etc/caddy-mailstack.caddy "$ROOT/etc/caddy/mailstack.caddy"
 install -m 0755 payload/scripts/cert-sync.sh  "$ROOT/usr/local/sbin/mailstack-cert-sync"
 install -m 0755 payload/scripts/healthcheck.sh "$ROOT/usr/local/sbin/mailstack-health"

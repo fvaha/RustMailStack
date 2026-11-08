@@ -28,6 +28,8 @@ SEND_LOCAL_DOMAINS=\${MAIL_DOMAIN:-}
 SEND_EXTERNAL=true
 IRIS_INTEGRATION_EMAIL_ENABLED=false
 TEMP_INBOX_DOMAIN=
+# Comma-separated allow-list for the admin dashboard (#/admin). Empty = nobody.
+IRIS_ADMIN_EMAILS=
 EOF
       chown root:iris /etc/iris/iris.env
       chmod 640 /etc/iris/iris.env
@@ -37,6 +39,12 @@ EOF
     if [ ! -f /etc/mailstack/mailstack.env ]; then
       cp /etc/mailstack/mailstack.env.example /etc/mailstack/mailstack.env
       chmod 600 /etc/mailstack/mailstack.env
+    fi
+
+    # white-label branding: seeded once, then owned by the admin (never overwritten)
+    if [ ! -f /etc/iris/branding.json ] && [ -f /etc/iris/branding.json.example ]; then
+      cp /etc/iris/branding.json.example /etc/iris/branding.json
+      chmod 644 /etc/iris/branding.json
     fi
 
     # certificate follow-up: daily, only restarts Stalwart when the cert changes
@@ -58,7 +66,8 @@ EOF
     echo "  2. open the Stalwart setup wizard: http://127.0.0.1:8080/admin"
     echo "     (tunnel it: ssh -N -L 8080:127.0.0.1:8080 <server>)"
     echo "  3. add $MAIL_HOST / $WEBMAIL_HOST to Caddy: import /etc/caddy/mailstack.caddy"
-    echo "  4. verify: /usr/local/sbin/mailstack-health"
+    echo "  4. branding (optional): /etc/iris/branding.json — name, logo, colours, links"
+    echo "  5. verify: /usr/local/sbin/mailstack-health"
     echo
     ;;
 esac

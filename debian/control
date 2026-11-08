@@ -7,8 +7,10 @@ Maintainer: vahid.im <vaha@vahid.im>
 Homepage: https://github.com/fvaha/RustMailStack
 Depends: curl, openssl, ca-certificates
 Recommends: caddy
-Description: Stalwart + IRIS mail stack (vahid.im)
+Description: Stalwart + IRIS self-hosted mail stack
  Stalwart mail server with the IRIS webmail frontend, packaged as one unit:
  systemd services, Caddy vhosts, TLS certificate sync and a health check.
  .
- Includes both mail server and webmail; no Docker, no compiler on the target host.
+ Includes both mail server and webmail; no Docker, no compiler on the target
+ host. White-label: name, logo, colours and links come from
+ /etc/iris/branding.json.

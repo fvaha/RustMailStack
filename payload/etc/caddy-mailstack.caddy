@@ -9,6 +9,13 @@
 {$WEBMAIL_HOST} {
     encode zstd gzip
 
+    # White-label branding — edit /etc/iris/branding.json, reload the page.
+    handle /branding.json {
+        root * /etc/iris
+        header Cache-Control "no-store"
+        file_server
+    }
+
     @backend path /api/* /auth/* /health
     handle @backend {
         reverse_proxy 127.0.0.1:{$IRIS_PORT} {

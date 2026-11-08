@@ -22,17 +22,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Pinned versions
+        run: cat versions.env >> "$GITHUB_ENV"
+
       - name: Toolchain
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq musl-tools nodejs npm pkg-config
           rustup target add ${{ matrix.target }}
 
-      - name: Build the IRIS fork (static, arch-specific)
+      - name: Build the IRIS fork at ${{ env.IRIS_REF }} (static, arch-specific)
         env:
           TARGET: ${{ matrix.target }}
         run: |
-          git clone --depth 1 https://github.com/${{ github.repository_owner }}/irisproject.git /tmp/iris
+          git init -q /tmp/iris
+          git -C /tmp/iris remote add origin "https://github.com/${IRIS_REPO}.git"
+          git -C /tmp/iris fetch -q --depth 1 origin "${IRIS_REF}"
+          git -C /tmp/iris checkout -q FETCH_HEAD
           ( cd /tmp/iris/apps/web && npm ci && npm run build )
           case "$TARGET" in
             x86_64-*)  export CC_x86_64_unknown_linux_musl=musl-gcc AR_x86_64_unknown_linux_musl=ar ;;
