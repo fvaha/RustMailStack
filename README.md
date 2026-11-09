@@ -47,8 +47,10 @@ sudo MAILSTACK_DOMAIN=example.com ./install.sh        # tarball
 After that, add `/etc/caddy/mailstack.caddy` to your Caddyfile and run `mailstack-health`. The admin
 password is printed once and stored in `/etc/mailstack/admin.credentials` (mode 600).
 
-Two steps stay manual because the provider owns them: the reverse DNS (PTR) record, and at some
-providers (netcup, for example) unblocking inbound port 25.
+Two steps stay manual because the provider owns them: the reverse DNS (PTR) record, and, at some
+providers, the default outbound SMTP block. netcup for example ships a "Mail block" firewall policy
+that blocks outgoing 25, 465 and 587; remove that rule in the Server Control Panel under
+Firewall, Firewall-Policy bearbeiten.
 
 ## Branding (white-label)
 
