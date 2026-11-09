@@ -69,6 +69,12 @@ if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "example.com" ]; then
   fi
 fi
 PROVISIONED=0
+# Upgrades keep whatever provisioning the server already has: only a fresh
+# install (no Iris database yet) or an explicit MAILSTACK_DOMAIN provisions.
+if [ -f /var/lib/iris/iris.db ] && [ -z "${MAILSTACK_DOMAIN:-}" ]; then
+  echo "existing install found, leaving Stalwart provisioning alone"
+  DOMAIN=""
+fi
 case "$DOMAIN" in
   ""|example.com) : ;;
   *)
